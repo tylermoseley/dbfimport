@@ -124,11 +124,15 @@ foreach($dbftables as $file) {
         or die ("Couldn't create table structure for table: " . $tbl . ". Error: " . mysqli_error($link));
         set_time_limit(0);
 
+        $lock = "LOCK TABLE `" . $tbl . "` WRITE;";
+        mysqli_query($link,$lock)
+        or die ("Lock Table failed for table: " . $tbl . ". Error: " . mysqli_error($link));
+        
         $trans = "START TRANSACTION;";
         mysqli_query($link,$trans)
         or die ("Start transaction failed for table: " . $tbl . ". Error: " . mysqli_error($link));
         
-        //create variable for number of records in dbf
+	//create variable for number of records in dbf
         $totalrecords = dbase_numrecords($dbaseopen);
 
         for ($i=1; $i<=$totalrecords; $i++){
@@ -159,6 +163,10 @@ foreach($dbftables as $file) {
         or die ("Commit failed for table: " . $tbl . ". Error: " . mysqli_error($link));
         set_time_limit(0);
         
+        $unlock = "UNLOCK TABLES;";
+        mysqli_query($link,$unlock)
+        or die ("UNLOCK failed for table: " . $tbl . ". Error: " . mysqli_error($link));
+
       //close DBF
         dbase_close($dbaseopen);
     }

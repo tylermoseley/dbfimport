@@ -100,7 +100,7 @@ foreach my $file (@expectfilenames) {
 
 $ftp->quit;
 
-system("vpnc disconnect");
+system("vpnc-disconnect");
 
 chdir "/var/www/html/import";
 mkdir("$dir_source/import", 0755);
@@ -146,7 +146,7 @@ if (-e $qvtest) {
     chdir '/var/www/html/import';
 }
 
-system("php5 /var/www/html/import/validate.php");
+system("php /var/www/html/import/validate.php");
 wait();
 open(my $bel_handle, '<:encoding(UTF-8)', $bu_error_log);
 while (my $row = <$bel_handle>) {
@@ -157,13 +157,10 @@ foreach $dir (@dirs) {
 	rmtree("$dir/P:");
 }
 
-system("php5 /var/www/html/import/convert_and_import.php");
+system("php /var/www/html/import/convert_and_import.php");
 wait();
 
-system("php5 /var/www/html/import/index.php");
-wait();
-
-system("cp /var/www/html/extraction/form_val.xml /var/www/html/extraction_dev/form_val.xml");
+system("php /var/www/html/import/index.php");
 wait();
 
 my $strexceptions = join("\n",@exceptions); 
