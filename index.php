@@ -218,7 +218,7 @@ $tables = array ('CCODNDDR' => array('C_CODE', 'NDDR_CODE'),
 		'HOT' => array('C_CODE`, `UNIT_NO', 'HOT1', 'C_CODE', 'UNIT_NO'),
 		'SAMPLE' => array('DONOR_NO', 'C_CODE', 'SAMP_DATE', 'C_CODE`, `SAMP_NO', 'C_CODE`, `DONOR_NO`, `SAMP_DATE'),
 		'RESLOTH' => array('C_CODE`, `SAMP_NO'),
-	    'CARTONS' => array('C_CODE`, `BOXING_KEY', 'C_CODE`, `SHIP_NO', 'C_CODE', 'BOXING_KEY', 'SHIP_NO'),
+	    	'CARTONS' => array('C_CODE`, `BOXING_KEY', 'C_CODE`, `SHIP_NO', 'C_CODE', 'BOXING_KEY', 'SHIP_NO'),
 		'INDEXED_LOT' => array('C_CODE_2', 'SHIP_NO', 'CUSTOMER', 'C_CODE_2`, `SHIP_NO'),
 		'PHYSICAL' => array('C_CODE`, `DONOR_NO`, `PHY_DATE', 'C_CODE', 'DONOR_NO', 'PHY_DATE'),
 		'AUDUNIT' =>array('C_CODE`, `UNIT_NO', 'C_CODE', 'UNIT_NO'),
@@ -253,6 +253,17 @@ while ($table = current($tables)) {
 echo "Index for " . key($tables) . " created\n";
 next($tables);
 }
+
+echo "Creating fulltext indexes";
+
+$database->query('CREATE FULLTEXT INDEX `idx_REGDONR_LAST`  ON `allpds3data`.`REGDONR` (LAST) COMMENT \'\' ALGORITHM DEFAULT LOCK DEFAULT');
+$database->execute();
+
+$database->query('CREATE FULLTEXT INDEX `idx_REGDONR_FIRST`  ON `allpds3data`.`REGDONR` (FIRST) COMMENT \'\' ALGORITHM DEFAULT LOCK DEFAULT');
+$database->execute();
+
+
+echo "Fulltext indexes created";
 
 //RESTART MYSQL SERVICE
 $command = shell_exec('service mysql restart');

@@ -156,11 +156,14 @@ while (my $row = <$bel_handle>) {
 foreach $dir (@dirs) {
 	rmtree("$dir/P:");
 }
-
+system("bash /usr/scripts/lockout.sh LOCK");
+wait();
 system("php /var/www/html/import/convert_and_import.php");
 wait();
 
 system("php /var/www/html/import/index.php");
+wait();
+system("bash /usr/scripts/lockout.sh UNLOCK");  
 wait();
 
 my $strexceptions = join("\n",@exceptions); 
