@@ -1,0 +1,2 @@
+get RENEDATA*.ZIP
+bye
