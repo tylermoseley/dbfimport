@@ -2,31 +2,38 @@
 //START TIME
 date_default_timezone_set('America/New_York');
 echo "Began at: ". date('m/d/Y h:i:sa') ."\n";
-flush();
 $starttime = microtime(true);
 
-include 'database.class.php';
+$schema = 'allpds3data';	
+
 define("DB_NAME", "allpds3data");
+define("DB_HOST", "localhost");
+define("DB_USER", "tmoseley");
+define("DB_PASS", "mTylel100!");
+    
+include 'database.class.php';
 include '../gfunctions.php';
+
+//$link = mysql_connect($schema);
 
 $database = new database();
 
-$drop_sql = "DROP TABLE IF EXISTS allpds3data.`CARTONS`";
+$drop_sql = "DROP TABLE IF EXISTS ".$schema.".CARTONS";
 mysqli_query($link,$drop_sql)
 	or die ("Error in drop_sql");
 echo "cartons dropped\n";
 //SELECT STATEMENT
 $create_sql = "
-CREATE TABLE IF NOT EXISTS allpds3data.`CARTONS` LIKE allpds3data.`21`; 
+CREATE TABLE IF NOT EXISTS ".$schema.".`CARTONS` LIKE ".$schema.".`21`; 
 ";
 
 //EXECUTE STATEMENT
 $create_query = mysqli_query($link,$create_sql)
 	or die("Error in cartons_sql");
-echo "cartons created";
+echo "cartons created\n";
 //SELECT STATEMENT
 $add_sql = "
-	ALTER TABLE allpds3data.`CARTONS` ADD `BOXING_KEY` VARCHAR(12) AFTER C_CODE;
+	ALTER TABLE ".$schema.".`CARTONS` ADD `BOXING_KEY` VARCHAR(12) AFTER `C_CODE`;
 ";
 
 //EXECUTE STATEMENT
@@ -49,7 +56,7 @@ mysqli_query($link,$start_t)
 
 while ($carton = mysqli_fetch_array($cartons_query, MYSQLI_ASSOC)) {
         $boxs_sql = "
-                SELECT * FROM `" . $carton["Tables_in_allpds3data (__)"] . "`;
+                SELECT * FROM `" . $carton["Tables_in_".$schema." (__)"] . "`;
         ";
 
         //EXECUTE STATEMENT
@@ -62,7 +69,7 @@ while ($carton = mysqli_fetch_array($cartons_query, MYSQLI_ASSOC)) {
 		} else {
 			$week = str_pad($box["WEEK_NO"],2," ",STR_PAD_LEFT);
 		}
-		$boxing = $box["YEAR_NO"] . $week . $carton["Tables_in_allpds3data (__)"] . $box["CASE_NO"];
+		$boxing = $box["YEAR_NO"] . $week . $carton["Tables_in_".$schema." (__)"] . $box["CASE_NO"];
 		$insert_sql = "INSERT INTO `CARTONS` VALUES (";
 		$insert_sql .= "'" . $box["C_CODE"] . "',";
 		$insert_sql .= "'" . $boxing . "',";
@@ -90,9 +97,9 @@ while ($carton = mysqli_fetch_array($cartons_query, MYSQLI_ASSOC)) {
 
 		//EXECUTE STATEMENT
 		$insert_query = mysqli_query($link,$insert_sql)
-      			or die("Error in insert_sql for: " . $carton["Tables_in_allpds3data (__)"] . " - " . mysqli_error($link));
+      			or die("Error in insert_sql for: " . $carton["Tables_in_".$schema." (__)"] . " - " . mysqli_error($link));
 	}
-echo $carton["Tables_in_allpds3data (__)"] . "complete\n";
+echo $carton["Tables_in_".$schema." (__)"] . "complete\n";
 }
 
 $commit = "COMMIT;";
@@ -101,13 +108,13 @@ mysqli_query($link,$commit)
 
 echo "Cartons Table Created\n";
 
-$drop_sql = "DROP TABLE IF EXISTS allpds3data.`INDEXED_LOT`";
+$drop_sql = "DROP TABLE IF EXISTS ".$schema.".`INDEXED_LOT`";
 mysqli_query($link,$drop_sql)
         or die ("Error in drop_sql");
 
 //SELECT STATEMENT
 $create_sql = "
-CREATE TABLE IF NOT EXISTS allpds3data.`INDEXED_LOT` LIKE allpds3data.`LOTQV`; 
+CREATE TABLE IF NOT EXISTS ".$schema.".`INDEXED_LOT` LIKE ".$schema.".`LOTQV`; 
 ";
 
 //EXECUTE STATEMENT
@@ -116,7 +123,7 @@ $create_query = mysqli_query($link,$create_sql)
 
 //SELECT STATEMENT
 $add_sql = "
-        ALTER TABLE allpds3data.`INDEXED_LOT` ADD `C_CODE_2` VARCHAR(2) AFTER C_CODE;
+        ALTER TABLE ".$schema.".`INDEXED_LOT` ADD `C_CODE_2` VARCHAR(2) AFTER C_CODE;
 ";
 
 //EXECUTE STATEMENT
@@ -125,7 +132,7 @@ $add_query = mysqli_query($link,$add_sql)
 
 //SELECT STATEMENT
 $add_sql = "
-        ALTER TABLE allpds3data.`INDEXED_LOT` ADD `SHIP_NO` VARCHAR(5) AFTER C_CODE_2;
+        ALTER TABLE ".$schema.".`INDEXED_LOT` ADD `SHIP_NO` VARCHAR(5) AFTER C_CODE_2;
 ";
 
 //EXECUTE STATEMENT
@@ -134,7 +141,7 @@ $add_query = mysqli_query($link,$add_sql)
 
 //SELECT STATEMENT
 $add_sql = "
-        ALTER TABLE allpds3data.`INDEXED_LOT` ADD `SPLIT` VARCHAR(1) AFTER SHIP_NO;
+        ALTER TABLE ".$schema.".`INDEXED_LOT` ADD `SPLIT` VARCHAR(1) AFTER SHIP_NO;
 ";
 
 //EXECUTE STATEMENT
@@ -146,7 +153,7 @@ mysqli_query($link,$start_t)
 	or die("Error in START TRANSACTION");
 
 $lots_sql = "
-SELECT * FROM allpds3data.`LOTQV`;
+SELECT * FROM ".$schema.".`LOTQV`;
 ";
 
 //EXECUTE STATEMENT
@@ -256,14 +263,14 @@ next($tables);
 
 echo "Creating fulltext indexes";
 
-$database->query('CREATE FULLTEXT INDEX `idx_REGDONR_LAST`  ON `allpds3data`.`REGDONR` (LAST) COMMENT \'\' ALGORITHM DEFAULT LOCK DEFAULT');
+$database->query('CREATE FULLTEXT INDEX `idx_REGDONR_LAST`  ON `'.$schema.'`.`REGDONR` (LAST) COMMENT \'\' ALGORITHM DEFAULT LOCK DEFAULT');
 $database->execute();
 
-$database->query('CREATE FULLTEXT INDEX `idx_REGDONR_FIRST`  ON `allpds3data`.`REGDONR` (FIRST) COMMENT \'\' ALGORITHM DEFAULT LOCK DEFAULT');
+$database->query('CREATE FULLTEXT INDEX `idx_REGDONR_FIRST`  ON `'.$schema.'`.`REGDONR` (FIRST) COMMENT \'\' ALGORITHM DEFAULT LOCK DEFAULT');
 $database->execute();
 
 
-echo "Fulltext indexes created";
+echo "Fulltext indexes created\n";
 
 //RESTART MYSQL SERVICE
 $command = shell_exec('service mysql restart');

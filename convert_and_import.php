@@ -1,5 +1,8 @@
 <?PHP 
-    
+
+$schema = $argv[1]
+        or die("Please enter schema\n");
+
 date_default_timezone_set('America/Chicago');
 echo "Began at: ". date('m/d/Y h:i:sa') ."\n";
 $starttime = microtime(true);
@@ -8,7 +11,7 @@ $starttime = microtime(true);
 $db_host = 'localhost';
 $db_uname = 'root';
 $db_passwd = 'plaut0mati0n';
-$db = 'allpds3data';
+$db = $schema;
 $link = mysqli_connect($db_host,$db_uname, $db_passwd, $db)
 or die ("Could not connect to database, error: " . mysqli_error($link));  
  

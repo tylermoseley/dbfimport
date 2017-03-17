@@ -34,8 +34,8 @@ my @expectfilenames = ();
 my @oldfiles = glob "/var/www/html/import/backuptars/*.*";
 my @exceptions = ();
 my $to = "tmoseley\@bplplasma.com";
-my $cc = "";
-#my $cc = "lwinter\@bplplasma.com, gtucker\@bplplasma.com, mlopez\@bplplasma.com, bmilligan\@bplplasma.com, csmith\@bplplasma.com, adelalatorre\@bplplasma.com";
+#my $cc = "";
+my $cc = "lwinter\@bplplasma.com";
 my $failmsg = "";
 my $p = Net::Ping->new('icmp');
 my $i = 0;
@@ -67,7 +67,7 @@ print "Verifying Connection\n";
 }
 print "Moving old files\n";
 foreach my $oldfile (@oldfiles) {
-remove($oldfile)
+unlink $oldfile
 		or do {
 			$failmsg = "File Remove Failed $!";
 			&failedemail;
@@ -100,98 +100,100 @@ foreach my $file (@expectfilenames) {
 
 $ftp->quit;
 
-#chdir "/var/www/html/import";
-#mkdir("$dir_source/import", 0755);
-#
-#print "Extracting Files....\n";
-#
-#my @tarfiles = glob "$dir_source/backuptars/*.tar.gz";
-#
-#foreach $tarname (@tarfiles) {
-#	my $foldername = substr $tarname, -17, 2;
-#	mkdir("$dir_source/import/$foldername");
-#	my $tar = Archive::Tar->new($tarname);
-#	my @targlob = $tar->list_files();
-#	foreach $dbf (@targlob) {
-#		$tar->extract_file($dbf, $dir_source."/import/".$foldername."/".$dbf);
-#	}
-#		if ($tar->error(1)) {
-#			my $incerror = $foldername . " (extraction error)";
-#			push(@exceptions, $incerror);
-#			
-#		}
-#	print $foldername . " extracted\n";	
-#}
-#
-#print "Copying Files....\n";
-#
-#foreach $dir (@dirs) {
-#	my @dbfglob = glob "$dir/P:/BACKUP/PDS3/PDS3DATA/*.DBF";
-#	foreach $dbff (@dbfglob) {
-#		copy($dbff, $dir);
-#	}	
-#	my $ccde = substr $dir, -2, 2;
-#	print "$ccde copied\n";
-#}
-#
-#if (-e $qvtest) {
-#    system("rm /var/www/html/import/import/QV/*.DBF");
-#
-#    system("sudo unzip -o -P udave \"/var/www/html/import/backuptars/RENEDATA$ymdyest.ZIP\" *.DBF -d /var/www/html/import/import/QV");
-#    wait();
-#    chdir '/var/www/html/import/import/QV';
-#    system("rename 's/.DBF/QV.DBF/' *.DBF");
-#    chdir '/var/www/html/import';
-#}
-#
-#system("php5 /var/www/html/import/validate.php");
-#wait();
-#open(my $bel_handle, '<:encoding(UTF-8)', $bu_error_log);
-#while (my $row = <$bel_handle>) {
-#	push(@errors, $row);
-#}
+system("vpnc-disconnect");
 
-#foreach $dir (@dirs) {
-#	rmtree("$dir/P:");
-#}
+chdir "/var/www/html/import";
+mkdir("$dir_source/import", 0755);
 
-#system("php5 /var/www/html/import/convert_and_import.php");
-#wait();
-#
-#system("php5 /var/www/html/import/index.php");
-#wait();
-#
-#system("cp /var/www/html/extraction/form_val.xml /var/www/html/extraction_dev/form_val.xml");
-#wait();
-#
-#my $strexceptions = join("\n",@exceptions); 
-#my $strerrors = join("",@errors);
-#
-#&email;
-#
-#sub failedemail {
-#	MIME::Lite->send ("smtp", "dciproxy.aanet.org:587");
-#	my $msgf = MIME::Lite->new
-#	(
-#		FROM	=> 'server@bplplasma.com',
-#		To	=> $to,
-#		CC	=> $cc,
-#		Data	=> "MySQL PDS3 system was unable to be updated for $mdy.\nError: $failmsg",
-#		Subject => "Failed MySQL PDS3 Update",
-#	);
-#	$msgf->send ();
-#	die;
-#}
-#
-#sub email {
-#	MIME::Lite->send ("smtp", "dciproxy.aanet.org:587");
-#	my $msg = MIME::Lite->new
-#	(
-#		From	=> 'server@bplplasma.com',
-#		To	=> $to,
-#		CC	=> $cc,
-#		Data	=> "MySQL PDS3 System updated for $mdy sucessfully.\n\nExceptions:\n$strexceptions\n\n(Centers listed above failed to upload backup for $mdy to the remote server.)\n\nThe following errors occured during backup filesize verification:\n$strerrors", 
-#		Subject => "MySQL PDS3 Updated",
-#	);
-#	$msg->send ();
-#}
+print "Extracting Files....\n";
+
+my @tarfiles = glob "$dir_source/backuptars/*.tar.gz";
+
+foreach $tarname (@tarfiles) {
+	my $foldername = substr $tarname, -17, 2;
+	mkdir("$dir_source/import/$foldername");
+	my $tar = Archive::Tar->new($tarname);
+	my @targlob = $tar->list_files();
+	foreach $dbf (@targlob) {
+		$tar->extract_file($dbf, $dir_source."/import/".$foldername."/".$dbf);
+	}
+		if ($tar->error(1)) {
+			my $incerror = $foldername . " (extraction error)";
+			push(@exceptions, $incerror);
+			
+		}
+	print $foldername . " extracted\n";	
+}
+
+print "Copying Files....\n";
+
+foreach $dir (@dirs) {
+	my @dbfglob = glob "$dir/P:/BACKUP/PDS3/PDS3DATA/*.DBF";
+	foreach $dbff (@dbfglob) {
+		copy($dbff, $dir);
+	}	
+	my $ccde = substr $dir, -2, 2;
+	print "$ccde copied\n";
+}
+
+if (-e $qvtest) {
+    system("rm /var/www/html/import/import/QV/*.DBF");
+
+    system("sudo unzip -o -P udave \"/var/www/html/import/backuptars/RENEDATA$ymdyest.ZIP\" *.DBF -d /var/www/html/import/import/QV");
+    wait();
+    chdir '/var/www/html/import/import/QV';
+    system("rename 's/.DBF/QV.DBF/' *.DBF");
+    chdir '/var/www/html/import';
+}
+
+system("php /var/www/html/import/validate.php");
+wait();
+open(my $bel_handle, '<:encoding(UTF-8)', $bu_error_log);
+while (my $row = <$bel_handle>) {
+	push(@errors, $row);
+}
+
+foreach $dir (@dirs) {
+	rmtree("$dir/P:");
+}
+system("bash /usr/scripts/lockout.sh LOCK");
+wait();
+system("php /var/www/html/import/convert_and_import.php");
+wait();
+
+system("php /var/www/html/import/index.php");
+wait();
+system("bash /usr/scripts/lockout.sh UNLOCK");  
+wait();
+
+my $strexceptions = join("\n",@exceptions); 
+my $strerrors = join("",@errors);
+
+&email;
+
+sub failedemail {
+	MIME::Lite->send ("smtp", "dciproxy.aanet.org:587");
+	my $msgf = MIME::Lite->new
+	(
+		FROM	=> 'server@bplplasma.com',
+		To	=> $to,
+		CC	=> $cc,
+		Data	=> "MySQL PDS3 system was unable to be updated for $mdy.\nError: $failmsg",
+		Subject => "Failed MySQL PDS3 Update",
+	);
+	$msgf->send ();
+	die;
+}
+
+sub email {
+	MIME::Lite->send ("smtp", "dciproxy.aanet.org:587");
+	my $msg = MIME::Lite->new
+	(
+		From	=> 'server@bplplasma.com',
+		To	=> $to,
+		CC	=> $cc,
+		Data	=> "MySQL PDS3 System updated for $mdy sucessfully.\n\nExceptions:\n$strexceptions\n\n(Centers listed above failed to upload backup for $mdy to the remote server.)\n\nThe following errors occured during backup filesize verification:\n$strerrors", 
+		Subject => "MySQL PDS3 Updated",
+	);
+	$msg->send ();
+}
