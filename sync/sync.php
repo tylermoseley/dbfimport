@@ -25,7 +25,7 @@ if (empty($argv[3])) {
     exit();
 } else {
     if ($argv[3] != "all" && $argv[3] != "select") {
-        echo "Typo in dl-true or dl-false after schema to indicate whether files need to be downloaded or not\n";
+        echo "Typo in all or select after dl-???? to indicate all sites or just non-migrated (per schema selection)\n";
         exit();
     } else {
         $all_select = $argv[3];
@@ -71,14 +71,20 @@ if ($manual == 'dl-true') {
         system($smb_text);
     }
     system('vpnc-disconnect');
-    system('rm -f RENEDATA*.ZIP');
     system('sftp -b dl.txt bpluser@10.2.1.10');
-}
 
-$paths = glob("*.tar.gz");
-$pathtext = "Sites downloaded- ".implode(", ", $paths);
-// email centers that fail
-system('echo '.$pathtext.' | mutt -s "download done" tyler.moseley@bplgroup.com -c ted.johnson@bplgroup.com');
+	// email centers that fail
+	$paths = glob("*.{tar.gz,ZIP}", GLOB_BRACE);
+	foreach($paths as $path){
+		$dl_ccodes[] = substr($path,0,2);
+	}
+	$ccode_diff = array_diff($ccodes,$dl_ccodes);
+	if(!in_array('RE',$dl_ccodes)){
+		$ccode_diff[] = 'QV';
+	}
+	$pathtext = "Backups complete with the following exceptions: \n".implode(", ", $ccode_diff);
+	system('echo '.$pathtext.' | mutt -s "download done" tyler.moseley@bplgroup.com -c ted.johnson@bplgroup.com');
+}
 
 // untar center files
 foreach ($paths as $path) {
@@ -93,17 +99,32 @@ foreach ($paths as $path) {
     system('mv '.$dirname.'.zip /share/archive/');
 }
 
-// unzip RENEDATA file
-system('rm -f ../import/QV/*.*');
+// unzip RENEDATA file and move
 system('mkdir -p ../import/QV');
-system('unzip -P udave -d ../import/QV RENEDATA*.ZIP "*.DBF" ');
+system('unzip -oP udave -d ../import/QV RENEDATA*.ZIP "*.DBF"');
 system('cp RENEDATA*.ZIP /share/');
 system('cp RENEDATA*.ZIP /share/archive/');
 chdir('/var/www/html/import/import/QV');
-system("rename 's/.DBF/QV.DBF/' *.DBF");
+system("rename -f 's/.DBF/QV.DBF/' !(*QV.DBF)");
 
+// move files to archive
+$share_files = glob('/share/*[0-9].{zip,ZIP}', GLOB_BRACE);
+foreach($share_files as $file){
+    $paths[substr(basename($file),0,2)][] = $file;
+}
+foreach($paths as $site => $files){
+    unset($paths[$site][count($files)-1]);
+}
+foreach($paths as $site => $files){
+    foreach($files as $file) {
+        system('mv '.$file.' /share/archive/');
+    }
+}
+
+// run aux scripts
 chdir('/var/www/html/import');
 system('bash /usr/scripts/lockout.sh LOCK');
+system('service mysql restart');
 system('php convert_and_import.php '.$schema);
 system('php index.php '.$schema);
 system('bash /usr/scripts/lockout.sh UNLOCK');
@@ -111,7 +132,8 @@ chdir('/var/www/html/ext_bi');
 system('php bi.php '.$schema);
 
 if ($all_select == 'select') {
-    system('trash -R ../import && mv ../importbu ../import');
+	chdir('/var/www/html/import');
+    system('trash -R import && mv importbu import');
 }
 
 ?>

@@ -1,12 +1,9 @@
 <?PHP 
-
 $schema = $argv[1]
         or die("Please enter schema\n");
-
 date_default_timezone_set('America/Chicago');
 echo "Began at: ". date('m/d/Y h:i:sa') ."\n";
 $starttime = microtime(true);
-
 //DB Connection variables
 $db_host = 'localhost';
 $db_uname = 'root';
@@ -21,7 +18,6 @@ $paths = glob("import/??/*.DBF");
 $filenames = array_map('basename', $paths);
 //dbftables array for all table types in /import/?? folders
 $dbftables = array_unique($filenames);
-
 //loop on each unique dbftables filename and set each to $file variable
 foreach($dbftables as $file) {
     
@@ -126,7 +122,6 @@ foreach($dbftables as $file) {
         mysqli_query($link,$createsql)
         or die ("Couldn't create table structure for table: " . $tbl . ". Error: " . mysqli_error($link));
         set_time_limit(0);
-
         $lock = "LOCK TABLE `" . $tbl . "` WRITE;";
         mysqli_query($link,$lock)
         or die ("Lock Table failed for table: " . $tbl . ". Error: " . mysqli_error($link));
@@ -137,7 +132,6 @@ foreach($dbftables as $file) {
         
 	//create variable for number of records in dbf
         $totalrecords = dbase_numrecords($dbaseopen);
-
         for ($i=1; $i<=$totalrecords; $i++){
            //records array variable to hold records
     
@@ -169,7 +163,6 @@ foreach($dbftables as $file) {
         $unlock = "UNLOCK TABLES;";
         mysqli_query($link,$unlock)
         or die ("UNLOCK failed for table: " . $tbl . ". Error: " . mysqli_error($link));
-
       //close DBF
         dbase_close($dbaseopen);
     }
@@ -187,7 +180,6 @@ foreach ($centpaths as $centpath) {
     $centpath->appendChild($xerrcode);
 }
 $xml->save('../extraction/form_val.xml');
-
 //WRITE ELAPSED TIMES TO LOG
 date_default_timezone_set('America/Chicago');
 $endtime = microtime(true);

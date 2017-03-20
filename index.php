@@ -4,8 +4,9 @@ date_default_timezone_set('America/New_York');
 echo "Began at: ". date('m/d/Y h:i:sa') ."\n";
 $starttime = microtime(true);
 
-$schema = 'allpds3data';	
-
+$schema = $argv[1]
+        or die("Please enter schema\n");	
+	
 define("DB_NAME", "allpds3data");
 define("DB_HOST", "localhost");
 define("DB_USER", "tmoseley");
@@ -14,7 +15,7 @@ define("DB_PASS", "mTylel100!");
 include 'database.class.php';
 include '../gfunctions.php';
 
-//$link = mysql_connect($schema);
+$link = mysql_connect($schema);
 
 $database = new database();
 
