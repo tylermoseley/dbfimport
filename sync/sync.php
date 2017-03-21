@@ -87,7 +87,8 @@ if ($manual == 'dl-true') {
 }
 
 // untar center files
-foreach ($paths as $path) {
+$tar_paths = glob("*.tar.gz");
+foreach ($tar_paths as $path) {
     $dirname = basename($path, ".tar.gz");
     $ccodedir = substr($dirname,0,2);
     system('tar -zxvf '.$path);

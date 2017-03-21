@@ -152,7 +152,7 @@ foreach($dbftables as $file) {
             $insql .= ')';
             
             mysqli_query($link,$insql)
-            or die ("Could not insert record, error: " . mysqli_error($link));
+            or die ("Could not process insert statement: ".$insql."error: ".mysqli_error($link));
             set_time_limit(0);        
         }
         $commit = "COMMIT;";
