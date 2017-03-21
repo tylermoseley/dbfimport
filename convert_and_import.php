@@ -63,21 +63,21 @@ foreach($dbftables as $file) {
         if (!$dbaseopen){
             echo "Could not open DBF: " . $fileinstance . "\n";
 			//ENTER CODE 5 FOR ANY CENTER WITH A DBF THAT FAILS TO OPEN
-			if (!in_array($ccode,$dup_preventer)) {
-				$xml = new DOMDocument();
-				$xml->preserveWhiteSpace = false;
-				$xml->formatOutput = true;
-				$xml->load('../extraction_dev/form_val.xml');
-				$xpath = new DOMXpath($xml);
-				$pathtext = "//centers/" . $ccode;
-				$centpaths = $xpath->query($pathtext);
-				$xerrcode = $xml->createElement("code","5");
-				foreach ($centpaths as $centpath) {
-					$centpath->appendChild($xerrcode);
-				}
-				$xml->save('../extraction_dev/form_val.xml');
-				$dup_preventer[] = $ccode;
-			}
+			//if (!in_array($ccode,$dup_preventer)) {
+			//	$xml = new DOMDocument();
+			//	$xml->preserveWhiteSpace = false;
+			//	$xml->formatOutput = true;
+			//	$xml->load('../extraction_dev/form_val.xml');
+			//	$xpath = new DOMXpath($xml);
+			//	$pathtext = "//centers/" . $ccode;
+			//	$centpaths = $xpath->query($pathtext);
+			//	$xerrcode = $xml->createElement("code","5");
+			//	foreach ($centpaths as $centpath) {
+			//		$centpath->appendChild($xerrcode);
+			//	}
+			//	$xml->save('../extraction_dev/form_val.xml');
+			//	$dup_preventer[] = $ccode;
+			//}
 			continue;
             }
       
@@ -122,9 +122,9 @@ foreach($dbftables as $file) {
         mysqli_query($link,$createsql)
         or die ("Couldn't create table structure for table: " . $tbl . ". Error: " . mysqli_error($link));
         set_time_limit(0);
-        $lock = "LOCK TABLE `" . $tbl . "` WRITE;";
-        mysqli_query($link,$lock)
-        or die ("Lock Table failed for table: " . $tbl . ". Error: " . mysqli_error($link));
+        //$lock = "LOCK TABLE `" . $tbl . "` WRITE;";
+        //mysqli_query($link,$lock)
+        //or die ("Lock Table failed for table: " . $tbl . ". Error: " . mysqli_error($link));
         
         $trans = "START TRANSACTION;";
         mysqli_query($link,$trans)
@@ -160,26 +160,26 @@ foreach($dbftables as $file) {
         or die ("Commit failed for table: " . $tbl . ". Error: " . mysqli_error($link));
         set_time_limit(0);
         
-        $unlock = "UNLOCK TABLES;";
-        mysqli_query($link,$unlock)
-        or die ("UNLOCK failed for table: " . $tbl . ". Error: " . mysqli_error($link));
+        //$unlock = "UNLOCK TABLES;";
+        //mysqli_query($link,$unlock)
+        //or die ("UNLOCK failed for table: " . $tbl . ". Error: " . mysqli_error($link));
       //close DBF
         dbase_close($dbaseopen);
     }
 }
 //WRITE ENTRY IN FORM VALIDATION FOR SCRIPT EXECUTION
-$xml = new DOMDocument();
-$xml->preserveWhiteSpace = false;
-$xml->formatOutput = true;
-$xml->load('../extraction/form_val.xml');
-$xpath = new DOMXpath($xml);
-$pathtext = '//centers';
-$centpaths = $xpath->query($pathtext);
-$xerrcode = $xml->createElement('complete','true');
-foreach ($centpaths as $centpath) {
-    $centpath->appendChild($xerrcode);
-}
-$xml->save('../extraction/form_val.xml');
+//$xml = new DOMDocument();
+//$xml->preserveWhiteSpace = false;
+//$xml->formatOutput = true;
+//$xml->load('../extraction/form_val.xml');
+//$xpath = new DOMXpath($xml);
+//$pathtext = '//centers';
+//$centpaths = $xpath->query($pathtext);
+//$xerrcode = $xml->createElement('complete','true');
+//foreach ($centpaths as $centpath) {
+//    $centpath->appendChild($xerrcode);
+//}
+//$xml->save('../extraction/form_val.xml');
 //WRITE ELAPSED TIMES TO LOG
 date_default_timezone_set('America/Chicago');
 $endtime = microtime(true);

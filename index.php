@@ -7,7 +7,7 @@ $starttime = microtime(true);
 $schema = $argv[1]
         or die("Please enter schema\n");	
 	
-define("DB_NAME", "allpds3data");
+define("DB_NAME", $schema);
 define("DB_HOST", "localhost");
 define("DB_USER", "tmoseley");
 define("DB_PASS", "mTylel100!");

@@ -1,41 +1,48 @@
 <?php
+
 chdir('/var/www/html/import/sync');
-
-if (empty($argv[1])) {
-    echo "Please enter schema\n";
-    exit();
-} else {
-    $schema = $argv[1];
-}
-
-if (empty($argv[2])) {
-    echo "Please enter dl-true or dl-false after schema to indicate whether files need to be downloaded or not\n";
-    exit();
-} else {
-    if ($argv[2] != "dl-true" && $argv[2] != "dl-false") {
-        echo "Typo in dl-true or dl-false after schema to indicate whether files need to be downloaded or not\n";
-        exit();
-    } else {
-        $manual = $argv[2];
-    }
-}
-
-if (empty($argv[3])) {
-    echo "Please enter all or select after dl-???? to indicate all sites or just sites in files\n";
-    exit();
-} else {
-    if ($argv[3] != "all" && $argv[3] != "select") {
-        echo "Typo in all or select after dl-???? to indicate all sites or just non-migrated (per schema selection)\n";
-        exit();
-    } else {
-        $all_select = $argv[3];
-    }
-}
 
 $user = exec('whoami');
 if ($user != 'root') {
     echo "Script must be run as root user\n";
     exit();
+}
+    
+$options = getopt("s:d:c:h", ['help']);
+//var_dump($options);
+
+$help_keys = array('h'=>false,'help'=>false);
+if(count(array_intersect_key($help_keys, $options))>0) {
+    echo "\nusage: php sync.php [options] [args] 
+    example: \"php sync.php -s allpds3data -d yes -c all\"
+    \t(executes sync on allpds3data schema after downloading files and updates all centers)\n
+    -s\tspecify schema [required]
+    -d\tdownload files (bool) [required]
+    -s\tall centers (\"all\") or only sites that are marked as not migrated in CCODNDDR for\n\tspecified schema (\"select\") [required]
+";
+    exit;
+} else if(!array_key_exists('s',$options) || !array_key_exists('d',$options) || !array_key_exists('c',$options)){
+    echo "\nRequired parameters missing!\n
+Type php sync.php -h or --help for more information on this error.\n
+";
+    exit;
+} else {
+    $schema = $options['s'];
+    if($options['d'] == "yes" || $options['d'] == "y" || $options['d'] == "Y" || $options['d'] == "YES") {
+        $dl = true;
+    } elseif ($options['d'] == "no" || $options['d'] == "n" ||$options['d'] == "N" || $options['d'] == "NO") {
+        $dl = false;
+    } else {
+        echo "Typo in download parameter\n";
+        echo "Type php sync.php -h or --help for more information on this error.\n";
+        exit;
+    }
+    if ($options['c'] != "all" && $options['c']  != "select") {
+        echo "Typo in all or select in center [c] parameter to indicate all sites or just non-migrated (per schema selection)\n";
+        exit;
+    } else {
+        $all_select = $options['c'];
+    }
 }
 
 if ($all_select == 'select') {
@@ -63,7 +70,7 @@ $date = date('Ymd');
 $yest = date('Ymd')-1;
 
 // download files if dl-true
-if ($manual == 'dl-true') {
+if ($dl == true) {
     system('vpnc default.conf');
     foreach ($ccodes as $ip => $ccode) {
         system('rm -f '.$ccode.'*.tar.gz');
@@ -72,11 +79,20 @@ if ($manual == 'dl-true') {
     }
     system('vpnc-disconnect');
     system('sftp -b dl.txt bpluser@10.2.1.10');
+	// trash old QV files
+	$rene_files = glob('RENEDATA*.ZIP');
+	foreach($rene_files as $rfile){
+		$rpaths[] = $rfile;
+	}
+	unset($rpaths[count($rene_files)-1]);
+	foreach($rpaths as $rpath){
+		system('trash '.$rpath);
+	}
 
 	// email centers that fail
-	$paths = glob("*.{tar.gz,ZIP}", GLOB_BRACE);
-	foreach($paths as $path){
-		$dl_ccodes[] = substr($path,0,2);
+	$f_paths = glob("*.{tar.gz,ZIP}", GLOB_BRACE);
+	foreach($f_paths as $f_path){
+		$dl_ccodes[] = substr($f_path,0,2);
 	}
 	$ccode_diff = array_diff($ccodes,$dl_ccodes);
 	if(!in_array('RE',$dl_ccodes)){
@@ -106,7 +122,7 @@ system('unzip -oP udave -d ../import/QV RENEDATA*.ZIP "*.DBF"');
 system('cp RENEDATA*.ZIP /share/');
 system('cp RENEDATA*.ZIP /share/archive/');
 chdir('/var/www/html/import/import/QV');
-system("rename -f 's/.DBF/QV.DBF/' !(*QV.DBF)");
+system("rename -f 's/.DBF/QV.DBF/' *[A-PR-Z][A-UW-Z].DBF");
 
 // move files to archive
 $share_files = glob('/share/*[0-9].{zip,ZIP}', GLOB_BRACE);
