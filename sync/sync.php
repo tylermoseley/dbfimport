@@ -98,7 +98,7 @@ if ($dl == true) {
 	if(!in_array('RE',$dl_ccodes)){
 		$ccode_diff[] = 'QV';
 	}
-	$pathtext = "Backups complete with the following exceptions: \n".implode(", ", $ccode_diff);
+	$pathtext = "Backups complete with the following exceptions: ".implode(", ", $ccode_diff);
 	system('echo '.$pathtext.' | mutt -s "download done" tyler.moseley@bplgroup.com -c ted.johnson@bplgroup.com');
 }
 
