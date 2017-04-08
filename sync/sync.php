@@ -8,7 +8,7 @@ if ($user != 'root') {
     exit();
 }
     
-$options = getopt("s:d:c:h", ['help']);
+$options = getopt("s:d:c:b:h", ['help']);
 //var_dump($options);
 
 $help_keys = array('h'=>false,'help'=>false);
@@ -17,11 +17,12 @@ if(count(array_intersect_key($help_keys, $options))>0) {
     example: \"php sync.php -s allpds3data -d yes -c all\"
     \t(executes sync on allpds3data schema after downloading files and updates all centers)\n
     -s\tspecify schema [required]
-    -d\tdownload files (bool) [required]
-    -s\tall centers (\"all\") or only sites that are marked as not migrated in CCODNDDR for\n\tspecified schema (\"select\") [required]
+    -d\tdownload files (yes or no) [required]
+    -c\tall centers (\"all\") or only sites that are marked as not migrated in CCODNDDR for\n\tspecified schema (\"select\") [required]
+	-b\tbi interface (yes or no) [required]
 ";
     exit;
-} else if(!array_key_exists('s',$options) || !array_key_exists('d',$options) || !array_key_exists('c',$options)){
+} else if(!array_key_exists('s',$options) || !array_key_exists('d',$options) || !array_key_exists('c',$options) || !array_key_exists('b',$options)){
     echo "\nRequired parameters missing!\n
 Type php sync.php -h or --help for more information on this error.\n
 ";
@@ -42,6 +43,15 @@ Type php sync.php -h or --help for more information on this error.\n
         exit;
     } else {
         $all_select = $options['c'];
+    }
+	if($options['b'] == "yes" || $options['b'] == "y" || $options['b'] == "Y" || $options['b'] == "YES") {
+        $bi = true;
+    } elseif ($options['b'] == "no" || $options['b'] == "n" ||$options['b'] == "N" || $options['b'] == "NO") {
+        $bi = false;
+    } else {
+        echo "Typo in bi interface parameter\n";
+        echo "Type php sync.php -h or --help for more information on this error.\n";
+        exit;
     }
 }
 
@@ -66,6 +76,7 @@ $mig_query = mysqli_query($link,$mig_sql)
 while ($mig_arr = mysqli_fetch_array($mig_query, MYSQLI_ASSOC)) {
     $ccodes[$mig_arr['ip_node']] = $mig_arr['C_CODE'];
 }
+
 $date = date('Ymd');
 $yest = date('Ymd')-1;
 
@@ -145,8 +156,13 @@ system('service mysql restart');
 system('php convert_and_import.php '.$schema);
 system('php index.php '.$schema);
 system('bash /usr/scripts/lockout.sh UNLOCK');
-chdir('/var/www/html/ext_bi');
-system('php bi.php '.$schema);
+
+//run bi interface if bi = true
+if ($bi == true) {
+	chdir('/var/www/html/ext_bi');
+	system('php bi.php '.$schema);
+}
+
 
 if ($all_select == 'select') {
 	chdir('/var/www/html/import');
